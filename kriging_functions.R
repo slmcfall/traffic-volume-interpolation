@@ -77,7 +77,14 @@ values(OR_rast) <- rep(1, ncell(OR_rast))
 
 # covert to griddf
 OR_grid <- as(OR_rast, 'SpatialGridDataFrame')
+s_sgdf <- as(OR_rast, 'SpatialGridDataFrame')
 
+#s_sgdf<-as(r_stack_covar,"SpatialGridDataFrame") #Conversion to spatial grid data frame, only convert the necessary layers!!
+s_spdf<-as.data.frame(s_sgdf) #Note that this automatically removes all NA rows
+s_spdf<-na.omit(s_spdf) #removes all rows that have na...
+coords<- s_spdf[,c('s1','s2')]
+coordinates(s_spdf)<-coords
+proj4string(s_spdf)<-proj4string(s_sgdf) #Need to assign coordinates...
 #           #
 # autoKrige #
 #           #
@@ -85,7 +92,15 @@ OR_grid <- as(OR_rast, 'SpatialGridDataFrame')
 # fit variogram
 variogram <- autofitVariogram(AADT ~ 1, input_data = OR_spdf)
 
+#this removes duplicates, did not  affectthe results
+data <- remove.duplicates(OR_spdf)#, zero = dist_val) #spatially sub sample...
+
 kriging_result = autoKrige(AADT ~ 1, input_data = OR_spdf, new_data = OR_grid)
+data$AADT <- as.numeric(data$AADT)
+kriging_result = autoKrige(AADT ~ 1, input_data = data, new_data = s_spdf,data_variogram=data)
+
+
+#data <- remove.duplicates(OR_spdf, zero = dist_val) #spatially sub sample...
 
 ##
 ###
