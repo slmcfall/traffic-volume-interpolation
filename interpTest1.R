@@ -139,7 +139,6 @@ plot(varstate_sample)
 
 # fitted exponential curve
 varstate_sample_fit <- fit.variogram(varstate_sample, vgm(1, "Exp", 3000, 1))
-
 # fit variogram
 variogram <- autofitVariogram(AADT ~ 1, input_data = state_sample_spdf)
 # remove duplicate values, seems like two duplicates per state
@@ -148,6 +147,15 @@ data <- remove.duplicates(state_sample_spdf)  #, zero = dist_val)  # spatially s
 kriging_result = autoKrige(AADT ~ 1, input_data = state_sample_spdf, new_data = state_sample_grid)
 data$AADT <- as.numeric(data$AADT)
 kriging_result = autoKrige(AADT ~ 1, input_data = data, new_data = state_sample_grid ,data_variogram=data)
+
+#            #
+# using geoR #
+#            #
+
+# the first point of semivariance is a negative number...
+variogram_geor <- variog(coords = state_sample_coords, data = state_sample_df)
+variofit <- variofit(variogram_geor)
+
 
 #            #
 # variograms #
