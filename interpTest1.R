@@ -29,8 +29,8 @@ library(automap)
 
 # for Sean's windows location
 # setwd("E:/Research/trafficVolume/ID/Pri_Sec_combined2/")
-
-setwd("/media/sean/Data/Research/trafficVolume/ID/Pri_Sec_combined2/")
+# setwd("/media/sean/Data/Research/trafficVolume/ID/Pri_Sec_combined2/")
+setwd("W:/slmcfall/traffic_from_desktop/ID/Pri_Sec_combined2/")
 
 # define albers equal area projection
 aea <- "+proj=aea +lat_1=38 +lat_2=41 +lat_0=34 +lon_0=-114 +x_0=0 +y_0=0 +datum=NAD27 +units=m +no_defs +ellps=clrk66"
