@@ -24,7 +24,10 @@ aea <- "+proj=aea +lat_1=38 +lat_2=41 +lat_0=34 +lon_0=-114 +x_0=0 +y_0=0 +datum
 #                             #
 
 # bring the shpfile into memory
+## primary points in OR
 state_sample <- readOGR(dsn = getwd(), layer = "pr_pnts_inter") #, p4s = NAD27)
+## secondary points in ID
+#state_sample <- readOGR(dsn = getwd(), layer = "sec_pnts_all") #, p4s = NAD27)
 
 # convert AADT column to data frame
 state_sample_df <- as.data.frame(state_sample$AADT)
@@ -85,8 +88,39 @@ state_variogram <- variogram(AADT ~ 1, state_sample_spdf, width = 300, cutoff = 
 state_vgm <- vgm(psill = 1 , model = "Exp", range = 10000/3, nugget = 1) 
 state_fvariogram <- fit.variogram(state_variogram, model = state_vgm)
 
+#
+# vanilla gstat krige
+#
+
 state_krige <- krige(AADT ~ 1, state_sample_spdf_avg, state_sample_grid,
                      model = state_fvariogram)
+
+#
+# attempt autofitVariogram
+#
+
+# fails
+## does not take on width, cutoff parameters
+opts <- list(orig.behavior = FALSE)
+state_autoVariogram <- autofitVariogram(AADT ~ 1, input_data = state_sample_spdf,
+                                          width = 300, cutoff = 100, verbose = TRUE,
+                                            miscFitOptions = opts)
+
+# succeeds 
+state_afvmod <- afvmod(AADT ~ 1, input_data = state_sample_spdf,
+                       width = 300, cutoff = 5000, verbose = TRUE,
+                       miscFitOptions = opts)
+
+state_sample_spdf_avg <- remove.duplicates(state_sample_spdf)
+state_sample_spdf_avg$AADT <- as.numeric(state_sample_spdf_avg$AADT)
+
+#
+# automap autokrige 
+#
+
+state_krige <- krige(AADT ~ 1, state_sample_spdf_avg, state_sample_grid,
+                     model = state_afvmod$var_model)
+  
 
 #
 # vector/raster output workaround
@@ -115,9 +149,9 @@ values(krige_var_rst) <- as.numeric(krige_var)
 # str(state_krige)
 
 # change name from krige_pred_rst...terribly redundant
-writeRaster(krige_pred_rst, "state_krige_pred.rst", overwrite = TRUE)
+writeRaster(krige_pred_rst, "state_krige_pred_autofit.tif", overwrite = TRUE)
 
-writeRaster(krige_var_rst, "state_krige_var.rst", overwrite = TRUE)
+writeRaster(krige_var_rst, "state_krige_var_autofit.tif", overwrite = TRUE)
 
 
 
