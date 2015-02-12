@@ -9,14 +9,12 @@
 #
 #
 
-
-
-getProj <- function(vct_name) {
+getProj <- function(vct_path) {
   
   #############
   
   # INPUTS
-  # vct_name  = vector name, including file ending
+  # vct_path  = vector name, including file ending
   
   # OUTPUTS
   # proj4string = proj4string
@@ -25,7 +23,7 @@ getProj <- function(vct_name) {
   
   # run system command
   # outputs to temp txt file
-  system(paste("gdalsrsinfo", vct_name, "> proj4str.txt", sep = " "))
+  system(paste("gdalsrsinfo", vct_path, "> proj4str.txt", sep = " "))
   
   # get second line of txt file
   proj4string <- readLines("proj4str.txt", n = 2)
@@ -33,35 +31,41 @@ getProj <- function(vct_name) {
   # save second line as variable
   proj4string <- substr(proj4string[2], 10, 200)
   
+  # remove first and last quotes from the string
+  proj4string <- substr(proj4string, 2, nchar(proj4string)-1)
+  
   return(proj4string)
 }
 
-createSpdf <- function(vct_name, vct_dir, proj, col_names) {
+createSpdf <- function(vct_path, col_names) {
   
   #############
   
   # INPUTS
-  # vct_name  = vector name, including file ending
+  # vct_path  = vector name, including file ending
   # vct_dir   = vector directory
   # proj      = proj4string
-  # col_names = column names, form of a vector! (an ice dragon!)
+  # col_names = column names, form of...a vector!
   
   # OUTPUTS
-  # spdf      = spatial points data frame that contains desired column/s
+  # vector_spdf      = spatial points data frame that contains desired column/s
   
   #############
   
+  # get basename and directory of file
+  vct_name <- basename(vct_path)
+  vct_dir <- dirname(vct_path)
+  
   # bring vector file into memory
-  vector <- readOGR(dsn = vct_dir, layer = vct_name) #, p4s = NAD27)
+  vector <- readOGR(dsn = vct_dir, layer = vct_name)
   
   # get proj4string
-  
-  # run system command to pull .prj info
-  
-  # access as string
+  proj <- getProj(paste(vct_path,".prj", sep = ""))
 
   # convert targeted column into df
-  vector_df <- as.data.frame(vector$col_names)
+  vector_df <- as.data.frame(vector)
+  vector_df <- vector_df[col_names]
+  
   # get shpfile coordinates pair
   vector_coords <- coordinates(vector)[,1:2]
   
@@ -70,4 +74,7 @@ createSpdf <- function(vct_name, vct_dir, proj, col_names) {
   proj4string(vector_spdf) <- proj
   names(vector_spdf) <- col_names
   
+  return (vector_spdf)
+  
 }
+
