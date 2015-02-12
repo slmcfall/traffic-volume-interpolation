@@ -101,10 +101,10 @@ state_krige <- krige(AADT ~ 1, state_sample_spdf_avg, state_sample_grid,
 
 # fails
 ## does not take on width, cutoff parameters
-opts <- list(orig.behavior = FALSE)
-state_autoVariogram <- autofitVariogram(AADT ~ 1, input_data = state_sample_spdf,
-                                          width = 300, cutoff = 100, verbose = TRUE,
-                                            miscFitOptions = opts)
+# opts <- list(orig.behavior = FALSE)
+# state_autoVariogram <- autofitVariogram(AADT ~ 1, input_data = state_sample_spdf,
+#                                          width = 300, cutoff = 100, verbose = TRUE,
+#                                            miscFitOptions = opts)
 
 # succeeds 
 state_afvmod <- afvmod(AADT ~ 1, input_data = state_sample_spdf,
