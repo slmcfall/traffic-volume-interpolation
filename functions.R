@@ -10,10 +10,27 @@
 #
 
 # function sequence
-# getProj
+setwd("/home/sean/Documents/trafficVolume/")
+source("autofitVariogram_mk.R")
+setwd("/home/sean/Documents/trafficVolume/CTshapefile")
+
 # createSpdf
+spdf <- createSpdf(paste(getwd(),"/sec_pnts_inter", sep=""), c("AADT"))
+
 # createRaster
+raster <- createRaster(spdf, 1000)
+
 # createGrid <- as(createRaster, 'SpatialGridDataFrame')
+grid <- as(raster, 'SpatialGridDataFrame')
+
+# createAvgSpdf
+spdf_avg <- createAvgSpdf(spdf, raster, c("AADT"))
+
+# createAutoVariogram
+variog <- createVariogram(c("AADT~1"), spdf, 300, 5000)
+
+# createKrigeLayer
+kr <- createKrigeLayer(spdf, grid, c("AADT~1"), variogram, "CT")
 
 getProj <- function(vct_path) {
   
@@ -152,4 +169,69 @@ createAvgSpdf <- function(spdf, rast, col_names) {
   
 }
 
+createVariogram <- function(equation, spdf, width, cutoff) {
+  
+  #############
+  
+  # PURPOSE
+  # creates variogram through modded autoFitVariogram function
+  
+  # INPUTS
+  # equation = equation for the variogram model (ex: AADT ~ 1)
+  # spdf     = SpatialPointsDataFrame
+  # width    =  width between pairs of points
+  # cutoff   = range of the variogram, essentially
+  
+  # OUTPUTS
+  # variogram = variogram for kriging
+  
+  #############
+  
+  opts <- list(orig.behavior = FALSE)
+  
+  # equation <- lapply(equation, as.formula)
+  
+  print(equation)
+  
+  variogram <- afvmod(as.formula(equation), input_data = spdf, width = width, cutoff = cutoff, 
+                      verbose = TRUE) # , miscFitOptions = opts)
+  
+  return (variogram)
+  
+}
 
+createKrigeLayer <- function(spdf, grid, raster, equation, variogram, rst_name) {
+  
+  spdf <- remove.duplicates(spdf)
+  spdf$AADT <- as.numeric(spdf$AADT)
+  
+  #
+  # automap autokrige 
+  #
+  
+  krige <- krige(as.formula(equation), spdf, grid,
+                       model = variogram$var_model)
+  
+  
+  #
+  # vector/raster output workaround
+  #
+  
+  # prediction layer
+  krige_pred <- krige$var1.pred
+  krige_pred_rst <- raster
+  names(krige_pred_rst) <- "krige_pred"
+  clearValues(krige_pred_rst) 
+  values(krige_pred_rst) <- as.numeric(krige_pred)
+  
+  # error layer
+  krige_var <- krige$var1.var
+  krige_var_rst <- raster
+  names(krige_var_rst) <- "krige_var"
+  clearValues(krige_var_rst) 
+  values(krige_var_rst) <- as.numeric(krige_var)
+  
+  writeRaster(krige_pred_rst, "state_krige_pred_autofit.tif", overwrite = TRUE)
+  
+  writeRaster(krige_var_rst, "state_krige_var_autofit.tif", overwrite = TRUE)
+}

@@ -84,16 +84,16 @@ names(state_sample_spdf_avg) <- c("AADT")
 # create variogram 
 #
 
-state_variogram <- variogram(AADT ~ 1, state_sample_spdf, width = 300, cutoff = 10000)
-state_vgm <- vgm(psill = 1 , model = "Exp", range = 10000/3, nugget = 1) 
-state_fvariogram <- fit.variogram(state_variogram, model = state_vgm)
+# state_variogram <- variogram(AADT ~ 1, state_sample_spdf, width = 300, cutoff = 10000)
+# state_vgm <- vgm(psill = 1 , model = "Exp", range = 10000/3, nugget = 1) 
+# state_fvariogram <- fit.variogram(state_variogram, model = state_vgm)
 
 #
 # vanilla gstat krige
 #
 
-state_krige <- krige(AADT ~ 1, state_sample_spdf_avg, state_sample_grid,
-                     model = state_fvariogram)
+#state_krige <- krige(AADT ~ 1, state_sample_spdf_avg, state_sample_grid,
+#                     model = state_fvariogram)
 
 #
 # attempt autofitVariogram
