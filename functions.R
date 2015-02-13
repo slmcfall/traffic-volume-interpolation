@@ -12,7 +12,7 @@
 # function sequence
 setwd("/home/sean/Documents/trafficVolume/")
 source("autofitVariogram_mk.R")
-setwd("/home/sean/Documents/trafficVolume/CTshapefile")
+setwd("/media/sean/Data/Research/trafficVolume/Buffers/SC/Sec_Buffers/")
 
 # createSpdf
 spdf <- createSpdf(paste(getwd(),"/sec_pnts_inter", sep=""), c("AADT"))
@@ -30,7 +30,7 @@ spdf_avg <- createAvgSpdf(spdf, raster, c("AADT"))
 variog <- createVariogram(c("AADT~1"), spdf, 300, 5000)
 
 # createKrigeLayer
-kr <- createKrigeLayer(spdf, grid, c("AADT~1"), variogram, "CT")
+kr <- createKrigeLayer(spdf, grid, raster, c("AADT~1"), variog, "SC_sec")
 
 getProj <- function(vct_path) {
   
@@ -209,7 +209,7 @@ createKrigeLayer <- function(spdf, grid, raster, equation, variogram, rst_name) 
   # automap autokrige 
   #
   
-  krige <- krige(as.formula(equation), spdf, grid,
+  krige <- krige(formula = as.formula(equation), spdf, grid,
                        model = variogram$var_model)
   
   
@@ -231,7 +231,7 @@ createKrigeLayer <- function(spdf, grid, raster, equation, variogram, rst_name) 
   clearValues(krige_var_rst) 
   values(krige_var_rst) <- as.numeric(krige_var)
   
-  writeRaster(krige_pred_rst, "state_krige_pred_autofit.tif", overwrite = TRUE)
+  writeRaster(krige_pred_rst, paste(rst_name,"pred_autofit.tif", sep=""), overwrite = TRUE)
   
-  writeRaster(krige_var_rst, "state_krige_var_autofit.tif", overwrite = TRUE)
+  writeRaster(krige_var_rst, paste(rst_name,"var_autofit.tif", sep=""), overwrite = TRUE)
 }

@@ -1,1 +1,5 @@
+/OR_data_temp
 /CTshapefile
+/NCshapefile
+*.docx*
+*.odt
