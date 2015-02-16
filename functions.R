@@ -12,7 +12,7 @@
 # function sequence
 setwd("/home/sean/Documents/trafficVolume/")
 source("autofitVariogram_mk.R")
-setwd("/media/sean/Data/Research/trafficVolume/Buffers/SC/Sec_Buffers/")
+setwd("/media/sean/Data/Research/trafficVolume/Buffers/RI/Sec_Buffers/")
 
 # createSpdf
 spdf <- createSpdf(paste(getwd(),"/sec_pnts_inter", sep=""), c("AADT"))
@@ -214,7 +214,7 @@ createKrigeLayer <- function(spdf, grid, raster, equation, variogram, rst_name) 
   
   
   #
-  # vector/raster output workaround
+  # vector/raster output workaround 
   #
   
   # prediction layer
@@ -235,3 +235,23 @@ createKrigeLayer <- function(spdf, grid, raster, equation, variogram, rst_name) 
   
   writeRaster(krige_var_rst, paste(rst_name,"var_autofit.tif", sep=""), overwrite = TRUE)
 }
+
+doKrige <- function(shapefile, columnname, resolution, equation, width, cutoff, outputname) {
+  
+  spdf <- createSpdf(shapefile, columnname)
+  
+  raster <- createRaster(spdf, resolution)
+  
+  grid <- as(raster, 'SpatialGridDataFrame')
+  
+  spdf_avg <- createAvgSpdf(spdf, raster, columnname)
+  
+  variog <- createVariogram(equation, spdf, width, cutoff)
+  
+  kr <- createKrigeLayer(spdf, grid, raster, equation, variog, outputname)
+}
+
+file <- paste(getwd(), "/sec_pnts_inter", sep="")
+
+doKrige(file, c("AADT"), 1000, c("AADT~1"), 300, 5000, "RI_sec_" )
+
