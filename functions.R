@@ -14,28 +14,10 @@ setwd("/home/sean/Documents/trafficVolume/")
 source("autofitVariogram_mk.R")
 setwd("/media/sean/Data/Research/trafficVolume/Buffers/RI/Sec_Buffers/")
 
-# createSpdf
-spdf <- createSpdf(paste(getwd(),"/sec_pnts_inter", sep=""), c("AADT"))
-
-# createRaster
-raster <- createRaster(spdf, 1000)
-
-# createGrid <- as(createRaster, 'SpatialGridDataFrame')
-grid <- as(raster, 'SpatialGridDataFrame')
-
-# createAvgSpdf
-spdf_avg <- createAvgSpdf(spdf, raster, c("AADT"))
-
-# createAutoVariogram
-variog <- createVariogram(c("AADT~1"), spdf, 300, 5000)
-
-# createKrigeLayer
-kr <- createKrigeLayer(spdf, grid, raster, c("AADT~1"), variog, "SC_sec")
-
 getProj <- function(vct_path) {
   
   #############
-  
+   
   # PURPOSE
   # Extracts proj4string from a shapefiles .prj file
   
@@ -254,4 +236,44 @@ doKrige <- function(shapefile, columnname, resolution, equation, width, cutoff, 
 file <- paste(getwd(), "/sec_pnts_inter", sep="")
 
 doKrige(file, c("AADT"), 1000, c("AADT~1"), 300, 5000, "RI_sec_" )
+
+#
+# compare meuse normal method to my method
+#
+
+data(meuse)
+coordinates(meuse) <- ~x+y
+meuse.proj4string <- "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +units=m +no_defs "
+proj4string(meuse) <- meuse.proj4string
+
+
+data(meuse.grid)
+gridded(meuse.grid) <- ~x+y
+meuse.raster <- raster(meuse.grid)
+
+# my functions
+meuse.raster <- createRaster(meuse, 100)
+meuse.avgspdf <- createAvgSpdf(meuse, meuse.raster, c("zinc"))
+
+# 
+meuse.variogram <- createVariogram(c("zinc~1"), meuse, 486, 1500)
+meuse.variogramaf <- autofitVariogram(zinc~1, meuse)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
