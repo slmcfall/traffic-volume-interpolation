@@ -182,6 +182,8 @@ createVariogram <- function(equation, spdf, width, cutoff) {
   
 }
 
+
+
 createKrigeLayer <- function(spdf, grid, raster, equation, variogram, rst_name) {
   
   spdf <- remove.duplicates(spdf)
@@ -194,6 +196,7 @@ createKrigeLayer <- function(spdf, grid, raster, equation, variogram, rst_name) 
   krige <- krige(formula = as.formula(equation), spdf, grid,
                        model = variogram$var_model)
   
+  return(krige)
   
   #
   # vector/raster output workaround 
@@ -218,6 +221,14 @@ createKrigeLayer <- function(spdf, grid, raster, equation, variogram, rst_name) 
   writeRaster(krige_var_rst, paste(rst_name,"var_autofit.tif", sep=""), overwrite = TRUE)
 }
 
+saveObjects <- function(variogram, krigeoutput, output_string) {
+  
+  object_list <- list(variogram, krigeoutput)
+  
+  save(object_list, output_string)
+  
+}
+
 doKrige <- function(shapefile, columnname, resolution, equation, width, cutoff, outputname) {
   
   spdf <- createSpdf(shapefile, columnname)
@@ -231,42 +242,23 @@ doKrige <- function(shapefile, columnname, resolution, equation, width, cutoff, 
   variog <- createVariogram(equation, spdf, width, cutoff)
   
   kr <- createKrigeLayer(spdf, grid, raster, equation, variog, outputname)
+  
+  saveObjects(variogram, kr, "RI")
 }
 
 file <- paste(getwd(), "/sec_pnts_inter", sep="")
-
 doKrige(file, c("AADT"), 1000, c("AADT~1"), 300, 5000, "RI_sec_" )
 
-#
-# compare meuse normal method to my method
-#
+spdf <- createSpdf(paste(getwd(),"/sec_pnts_all",sep=""), c("AADT"))
 
-data(meuse)
-coordinates(meuse) <- ~x+y
-meuse.proj4string <- "+proj=sterea +lat_0=52.15616055555555 +lon_0=5.38763888888889 +k=0.9999079 +x_0=155000 +y_0=463000 +ellps=bessel +units=m +no_defs "
-proj4string(meuse) <- meuse.proj4string
+raster <- createRaster(spdf, 100)
 
+grid <- as(raster, 'SpatialGridDataFrame')
 
-data(meuse.grid)
-gridded(meuse.grid) <- ~x+y
-meuse.raster <- raster(meuse.grid)
+spdf_avg <- createAvgSpdf(spdf, raster, c("AADT"))
 
-# my functions
-meuse.raster <- createRaster(meuse, 100)
-meuse.avgspdf <- createAvgSpdf(meuse, meuse.raster, c("zinc"))
-
-# 
-meuse.variogram <- createVariogram(c("zinc~1"), meuse, 486, 1500)
-meuse.variogramaf <- autofitVariogram(zinc~1, meuse)
-
-
-
-
-
-
-
-
-
+variogram <- afvmod(AADT~1, input_data = spdf )
+variogram2 <- afvmod(AADT~1, input_data = spdf, width = 300, cutoff = 5000)
 
 
 
