@@ -10,6 +10,7 @@ library(gtools)
 library(colorRamps) 
 library(gridExtra)
 library(automap)
+library(tools)
 
 # functions
 

@@ -31,7 +31,7 @@ getProj <- function(vct_path) {
   
   # run system command
   # outputs to temp txt file
-  system(paste("gdalsrsinfo", vct_path, "> proj4str.txt", sep = " "))
+  system(paste("sudo bash -c gdalsrsinfo", vct_path, "> proj4str.txt", sep = " "))
   
   # get second line of txt file
   proj4string <- readLines("proj4str.txt", n = 2)
@@ -71,7 +71,7 @@ createSpdf <- function(vct_path, col_names) {
   vector <- readOGR(dsn = vct_dir, layer = vct_name)
   
   # get proj4string
-  proj <- getProj(paste(vct_path,".prj", sep = ""))
+  proj <- "+proj=aea +lat_1=38 +lat_2=41 +lat_0=34 +lon_0=-114 +x_0=0 +y_0=0 +datum=NAD27 +units=m +no_defs"
 
   # convert targeted column into df
   vector_df <- as.data.frame(vector)
@@ -182,8 +182,6 @@ createVariogram <- function(equation, spdf, width, cutoff) {
   
 }
 
-
-
 createKrigeLayer <- function(spdf, grid, raster, equation, variogram, rst_name) {
   
   spdf <- remove.duplicates(spdf)
@@ -246,6 +244,10 @@ doKrige <- function(shapefile, columnname, resolution, equation, width, cutoff, 
   saveObjects(variogram, kr, "RI")
 }
 
+#
+# example 
+#
+
 file <- paste(getwd(), "/sec_pnts_inter", sep="")
 doKrige(file, c("AADT"), 1000, c("AADT~1"), 300, 5000, "RI_sec_" )
 
@@ -259,6 +261,47 @@ spdf_avg <- createAvgSpdf(spdf, raster, c("AADT"))
 
 variogram <- afvmod(AADT~1, input_data = spdf )
 variogram2 <- afvmod(AADT~1, input_data = spdf, width = 300, cutoff = 5000)
+
+
+#
+# for loop to create range 
+#
+states <- c()
+ranges <- c()
+
+ready_files = list.files(path = "~/traffic/data", pattern = "*shp*", full.names = TRUE)
+
+for (file in ready_files) {
+  file <- file_path_sans_ext(file)
+  state_abrv <- substring(basename(file), 1 , 2)
+  states <- c(states, state_abrv)
+  
+   
+  spdf <- createSpdf(file, c("AADT")
+  raster <- createRaster(spdf, 500)
+  grid <- as(raster, 'SpatialGridDataFrame')
+  spdf_avg <- createAvgSpdf(spdf, raster, c("AADT"))
+  variogram <- createVariogram(c("AADT ~ 1"), spdf, 300, 5000) )
+  
+  range <- variogram$var_model$range[2]
+  ranges <- c(ranges, range)
+  #a <- c(a, file)
+}
+
+#
+# single case use, how to get range by itself
+#
+
+AL <- "/home/sean/traffic/data/AL_ready"
+
+projection <- "+proj=aea +lat_1=38 +lat_2=41 +lat_0=34 +lon_0=-114 +x_0=0 +y_0=0 +datum=NAD27 +units=m +no_defs"
+spdf <- createSpdf(AL, c("AADT"))
+raster <- createRaster(spdf, 500)
+grid <- as(raster, 'SpatialGridDataFrame')
+spdf_avg <- createAvgSpdf(spdf, raster, c("AADT"))
+variogram <- createVariogram(c("AADT ~ 1"), spdf, 300, 5000)
+
+
 
 
 
