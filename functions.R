@@ -266,10 +266,11 @@ variogram2 <- afvmod(AADT~1, input_data = spdf, width = 300, cutoff = 5000)
 #
 # for loop to create range 
 #
+
 states <- c()
 ranges <- c()
 
-ready_files = list.files(path = "~/traffic/data", pattern = "*shp*", full.names = TRUE)
+ready_files = list.files(path = "~/traffic/WA_example", recursive = TRUE, pattern = "*shp", full.names = TRUE)
 
 for (file in ready_files) {
   file <- file_path_sans_ext(file)
@@ -277,16 +278,23 @@ for (file in ready_files) {
   states <- c(states, state_abrv)
   
    
-  spdf <- createSpdf(file, c("AADT")
+  spdf <- createSpdf(file, c("AADT"))
   raster <- createRaster(spdf, 500)
   grid <- as(raster, 'SpatialGridDataFrame')
   spdf_avg <- createAvgSpdf(spdf, raster, c("AADT"))
-  variogram <- createVariogram(c("AADT ~ 1"), spdf, 300, 5000) )
+  variogram <- createVariogram(c("AADT ~ 1"), spdf, 300, 5000)
   
   range <- variogram$var_model$range[2]
   ranges <- c(ranges, range)
   #a <- c(a, file)
+  # GA is acting a fool
+  # ME is acting a fool
+  # IA is huge
+  # NC is huge
+  # NH is acting a fool
 }
+
+ranges_df <- data.frame(states, ranges)
 
 #
 # single case use, how to get range by itself
