@@ -1,16 +1,5 @@
-library(geoR)
-library(rgdal)
-library(gstat)
-library(sp)
-library(raster)
-library(maptools)
-library(rasterVis)  
-library(rgeos)      
-library(gtools)     
-library(colorRamps) 
-library(gridExtra)
-library(automap)
-library(tools)
+
+
 
 # functions
 

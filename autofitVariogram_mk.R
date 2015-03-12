@@ -24,12 +24,12 @@ gg_variogram <- function(krigeobj){
 }
 
 
-afvmod = function(formula, input_data, model = c("Sph", "Exp", "Gau", "Ste"),
+afvmod <- function(formula, input_data, model = c("Sph", "Exp", "Gau", "Ste"),
                   kappa = c(0.05, seq(0.2, 2, 0.1), 5, 10), fix.values = c(NA,NA,NA),
                   verbose = FALSE, GLS.model = NA, start_vals = c(NA,NA,NA), 
-                  miscFitOptions = list(), fit.method = 7, ...)
+                  miscFitOptions = list(), fit.method = 7, ...){
   # This function automatically fits a variogram to input_data
-{
+  
   # Check for anisotropy parameters
   if('alpha' %in% names(list(...))) warning('Anisotropic variogram model fitting not supported, see the documentation of autofitVariogram for more details.')
   
