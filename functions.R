@@ -11,6 +11,7 @@
 
 library(geoR)
 library(rgdal)
+library(rgeos)
 library(gstat)
 library(sp)
 library(raster)
@@ -533,8 +534,8 @@ afvmod <- function(formula, input_data, model = c("Sph", "Exp", "Gau", "Ste"),
 # example 
 #
 
-file <- paste(getwd(), "/sec_pnts_inter", sep="")
-doKrige(file, c("AADT"), 1000, c("AADT~1"), 300, 5000, "RI_sec_" )
+#file <- paste(getwd(), "/sec_pnts_inter", sep="")
+#doKrige(file, c("AADT"), 1000, c("AADT~1"), 300, 5000, "RI_sec_" )
 
 # GA is acting a fool
 # ME is acting a fool
