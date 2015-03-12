@@ -24,6 +24,7 @@ library(gridExtra)
 library(automap)
 library(tools)
 require(lattice)
+library(plyr)
 
 createSpdf <- function(vct_path, col_names, proj4) {
   

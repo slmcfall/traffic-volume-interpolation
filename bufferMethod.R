@@ -42,7 +42,7 @@ getAdjStates <- function(stateAbbrv) {
 
 # calculate range for each adjacent state
 
-getStateRanges <- function(adjStates, proj4str, column_names, equation) {
+getStateRanges <- function(adjStates, proj4str, column_names, equation, width, cutoff) {
 
   proj <- proj4str
   ranges <- c()
@@ -56,23 +56,74 @@ getStateRanges <- function(adjStates, proj4str, column_names, equation) {
     raster <- createRaster(spdf = spdf, resolution = 1000)
     avg_spdf <- createAvgSpdf(spdf, raster, column_names)
     # HOW should the width and cutoff be generated?
-    variogram <- createVariogram(equation, spdf, 300, 5000)
+    variogram <- createVariogram(equation, spdf, width, cutoff)
     
     range_state <- round(getRange(variogram))
     print(range_state)
     ranges <- c(ranges, range_state)
   }
   
-  return (ranges)
-  
+  ranges_df <- data.frame(adjStates, ranges)
+  return (ranges_df)
 }
 
 # use range of each adjacent state to buffer State A
 
+range_df <- getStateRanges(adjStates, projection, c("AADT"), c("AADT~1"), 300, 5000)
+
+# do.call(function(ranges,...) print(ranges), range_df )
+
+getBuffers <- function(state_range) {
+  singleState <- selectState(state_abbrv)
+  singleStateRange <- state_range
+  
+  adjState_buff <-
+}
+singleStateAbbrv <- selectState(as.character(range_df$adjStates[2]))
+singleStateRange <- range_df$ranges[2]
+
+WA <- selectState("WA")
+adjState_buff <- gBuffer(WA, width = singleStateRange) #, byid = TRUE)
+
 # clip buffered State A using adjacent state
 
-# merge State A, and clipped buffers
+clipped_range_buffer <- gIntersection(adjState_buff, singleStateAbbrv )
 
 # clip points outside of State A according to clipped buffers
 
+ID_points <- createSpdf("/home/sean/traffic/WA_example/ID", c("AADT"), projection)
+ID_points_clipped <- gIntersection(clipped_range_buffer, ID_points)
+WA_points <- createSpdf("/home/sean/traffic/WA_example/WA", c("AADT"), projection)
+
 # merge clipped points 
+
+WA_points_all <- spRbind(WA_points, ID_points_clipped)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
