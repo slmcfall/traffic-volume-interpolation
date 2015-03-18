@@ -5,3 +5,5 @@
 /NCshapefile
 *.docx*
 *.odt
+*.swo
+*.swp

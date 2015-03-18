@@ -133,7 +133,7 @@ createAvgSpdf <- function(spdf, rast, col_names) {
   
 }
 
-createVariogram <- function(equation, spdf, width, cutoff) {
+createVariogram <- function(equation, spdf, rast) {
   
   #############
   
@@ -144,7 +144,6 @@ createVariogram <- function(equation, spdf, width, cutoff) {
   # equation = equation for the variogram model (ex: AADT ~ 1)
   # spdf     = SpatialPointsDataFrame
   # width    =  width between pairs of points
-  # cutoff   = range of the variogram, essentially
   
   # OUTPUTS
   # variogram = variogram for kriging
@@ -153,15 +152,29 @@ createVariogram <- function(equation, spdf, width, cutoff) {
   
   opts <- list(orig.behavior = FALSE)
   
-  # equation <- lapply(equation, as.formula)
+  # generate the cutoff or range
+  var_cutoff <- getCutoff(spdf)
   
-  print(equation)
+  # generate the width or lag size
+  var_width <- (res(rast)[1]) / 2
   
-  variogram <- afvmod(as.formula(equation), input_data = spdf, width = width, cutoff = cutoff, 
+  variogram <- afvmod(as.formula(equation), input_data = spdf, width = var_width, cutoff = var_cutoff, 
                       verbose = TRUE) # , miscFitOptions = opts)
   
   return (variogram)
+}
+
+getCutoff <- function(spdf) {
+  spdf_bbox <- bbox(spdf)
+  x1 <- spdf_bbox[1]
+  x2 <- spdf_bbox[2]
+  y1 <- spdf_bbox[3]
+  y2 <- spdf_bbox[4]
   
+  spdf_bbox_dist <- sqrt((x1-x2)^2 + (y1-y2)^2)
+  spdf_range <- spdf_bbox_dist * .35
+  
+  return(spdf_range) 
 }
 
 createKrigeLayer <- function(spdf, grid, raster, equation, variogram, rst_name) {

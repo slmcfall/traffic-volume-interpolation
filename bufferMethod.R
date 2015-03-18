@@ -69,16 +69,12 @@ getStateRanges <- function(adjStates, proj4str, column_names, equation, width, c
 
 # use range of each adjacent state to buffer State A
 
-range_df <- getStateRanges(adjStates, projection, c("AADT"), c("AADT~1"), 300, 5000)
+adjWA <- getAdjStates("WA")
+
+range_df <- getStateRanges(adjWA, projection, c("AADT"), c("AADT~1"), 300, 5000)
 
 # do.call(function(ranges,...) print(ranges), range_df )
 
-getBuffers <- function(state_range) {
-  singleState <- selectState(state_abbrv)
-  singleStateRange <- state_range
-  
-  adjState_buff <-
-}
 singleStateAbbrv <- selectState(as.character(range_df$adjStates[2]))
 singleStateRange <- range_df$ranges[2]
 
