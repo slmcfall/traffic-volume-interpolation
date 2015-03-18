@@ -56,7 +56,10 @@ getStateRanges <- function(adjStates, proj4str, column_names, equation, width, c
     raster <- createRaster(spdf = spdf, resolution = 1000)
     avg_spdf <- createAvgSpdf(spdf, raster, column_names)
     # HOW should the width and cutoff be generated?
-    variogram <- createVariogram(equation, spdf, width, cutoff)
+    buffer_width <- getBufferWidth(raster)
+    buffer_cutoff <- getBufferCutoff(spdf)
+    
+    variogram <- createVariogram(equation, spdf, buffer_width, buffer_cutoff)
     
     range_state <- round(getRange(variogram))
     print(range_state)

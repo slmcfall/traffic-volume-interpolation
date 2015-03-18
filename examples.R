@@ -61,3 +61,8 @@ getCutoff <- function(spdf) {
   
   return(spdf_range) 
 }
+
+getWidth <- function(rast) {
+  width <- res(rast)[1] / 2
+  return (width)
+}
