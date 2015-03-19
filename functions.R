@@ -133,7 +133,7 @@ createAvgSpdf <- function(spdf, rast, col_names) {
   
 }
 
-createVariogram <- function(equation, spdf, width, cutoff) {
+createVariogram <- function(equation, spdf, varWidth, varCutoff) {
   
   #############
   
@@ -153,7 +153,8 @@ createVariogram <- function(equation, spdf, width, cutoff) {
   
   opts <- list(orig.behavior = FALSE)
   
-  variogram <- afvmod(as.formula(equation), input_data = spdf, width = width, cutoff = spdf_range, 
+  
+  variogram <- afvmod(as.formula(equation), input_data = spdf, width = varWidth, cutoff = varCutoff, 
                       verbose = TRUE) # , miscFitOptions = opts)
   
   return (variogram)

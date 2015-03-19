@@ -42,9 +42,8 @@ getAdjStates <- function(stateAbbrv) {
 
 # calculate range for each adjacent state
 
-getStateRanges <- function(adjStates, proj4str, column_names, equation, width, cutoff) {
+getStateRanges <- function(adjStates, proj4str, column_names, equation) {
 
-  proj <- proj4str
   ranges <- c()
   
   for (stateAbbrv in adjStates) {
@@ -52,7 +51,7 @@ getStateRanges <- function(adjStates, proj4str, column_names, equation, width, c
     vct_path <- paste("/home/sean/traffic/WA_example/", state_abbrv, sep = "")
     column_names <- column_names
     
-    spdf <- createSpdf(vct_path, column_names, proj)
+    spdf <- createSpdf(vct_path, column_names, proj4str)
     raster <- createRaster(spdf = spdf, resolution = 1000)
     avg_spdf <- createAvgSpdf(spdf, raster, column_names)
     # HOW should the width and cutoff be generated?
@@ -62,7 +61,6 @@ getStateRanges <- function(adjStates, proj4str, column_names, equation, width, c
     variogram <- createVariogram(equation, spdf, buffer_width, buffer_cutoff)
     
     range_state <- round(getRange(variogram))
-    print(range_state)
     ranges <- c(ranges, range_state)
   }
   
@@ -74,7 +72,7 @@ getStateRanges <- function(adjStates, proj4str, column_names, equation, width, c
 
 adjWA <- getAdjStates("WA")
 
-range_df <- getStateRanges(adjWA, projection, c("AADT"), c("AADT~1"), 300, 5000)
+range_df <- getStateRanges(adjWA, projection, c("AADT"), c("AADT~1"))
 
 # do.call(function(ranges,...) print(ranges), range_df )
 
