@@ -76,6 +76,9 @@ range_df <- getStateRanges(adjWA, projection, c("AADT"), c("AADT~1"))
 
 # do.call(function(ranges,...) print(ranges), range_df )
 
+# iterate over dimensions of range_df
+# dim(range_df)[1]
+
 singleStateAbbrv <- selectState(as.character(range_df$adjStates[2]))
 singleStateRange <- range_df$ranges[2]
 
@@ -98,7 +101,42 @@ WA_points_all <- spRbind(WA_points, ID_points_clipped)
 
 
 
+getBufferedSpdf <- function(state.abbrv, directory, column.names, projection, ranges.df) {
+  
+  originalState_border <- selectState(state.abbrv)
+  
+  vct_path <- paste(directory, state.abbrv, sep = "")
+  originalState_points <- createSpdf(vct_path, column.names, projection)
 
+  for (state in seq(1:dim(ranges.df)[1])){
+    
+    stateAbbrv <- as.character(ranges.df$adjState[state])
+    
+    # select border of adjacent state
+    singleState_border <- selectState(stateAbbrv)
+    # select range of adjacent state
+    singleState_range <- (ranges.df$ranges[state])
+    
+    # create buffer of original state with adjacent state range
+    originalState_buffer <- gBuffer(originalState, width = singleState_range)
+    
+    # pull out points for the adjacent state
+    vct_path <- paste("/home/sean/traffic/WA_example/", stateAbbrv, sep = "")
+    column_names <- c("AADT")
+    
+    adjState_points <- createSpdf(vct_path, column_names, projection)
+    
+    # clip out the points that intersect the buffer
+    adjState_clipped_points <- gIntersection(originalState_buffer, adjState_points)
+    
+    # merge the points to the original state
+    
+    originalState_points <- spRbind(originalState_points, adjState_clipped_points)
+    
+  } 
+
+  return(originalState_points)
+}
 
 
 

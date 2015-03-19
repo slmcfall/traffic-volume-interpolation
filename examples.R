@@ -17,6 +17,6 @@ meuse.avgspdf <- createAvgSpdf(meuse, meuse.raster, c("zinc"))
 #
 meuse.cutoff <- getBufferCutoff(meuse)
 meuse.width <- getBufferWidth(meuse.raster)
-meuse.variogram <- createVariogram(c("zinc~1"), meuse, 3000, 5000)
+meuse.variogram <- createVariogram(c("zinc~1"), meuse, meuse.width, meuse.cutoff)
 meuse.variogramaf <- autofitVariogram(zinc~1, meuse)
 

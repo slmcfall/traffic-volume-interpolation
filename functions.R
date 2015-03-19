@@ -151,11 +151,11 @@ createVariogram <- function(equation, spdf, varWidth, varCutoff) {
   
   #############
   
+  # original behavior MUST be ignored else cutoff and width parameters will have no effect! 
   opts <- list(orig.behavior = FALSE)
   
-  
   variogram <- afvmod(as.formula(equation), input_data = spdf, width = varWidth, cutoff = varCutoff, 
-                      verbose = TRUE) # , miscFitOptions = opts)
+                      verbose = TRUE, miscFitOptions = opts)
   
   return (variogram)
 }
