@@ -33,8 +33,8 @@ stateVector <- as.vector(stateFactor)
 colnames(adjTable) <- stateVector
 rownames(adjTable) <- stateVector
 
-getAdjStates <- function(stateAbbrv) {
-  adjStates <- which(adjTable[stateAbbrv,] == "TRUE")
+getAdjStates <- function(state.abbrv) {
+  adjStates <- which(adjTable[state.abbrv,] == "TRUE")
   adjStates <- names(adjStates)
   
   return(adjStates)
@@ -42,42 +42,40 @@ getAdjStates <- function(stateAbbrv) {
 
 # calculate range for each adjacent state
 
-getStateRanges <- function(adjStates, proj4str, column_names, equation) {
+getStateRanges <- function(adj.states, proj.str, col.names, equation, pnt.suffix, pnt.dir, rst.res) {
 
   ranges <- c()
   
-  for (stateAbbrv in adjStates) {
-    state_abbrv <- stateAbbrv
-    vct_path <- paste("/home/sean/traffic/WA_example/", state_abbrv, sep = "")
-    column_names <- column_names
+  for (state.abbrv in adj.states) {
+    vct.path <- paste(pnt.dir, state.abbrv, pnt.suffix, sep = "")
     
-    spdf <- createSpdf(vct_path, column_names, proj4str)
-    raster <- createRaster(spdf = spdf, resolution = 1000)
-    avg_spdf <- createAvgSpdf(spdf, raster, column_names)
-    # HOW should the width and cutoff be generated?
-    buffer_width <- getBufferWidth(raster)
-    buffer_cutoff <- getBufferCutoff(spdf)
+    spdf <- createSpdf(vct.path, col.names, proj.str)
+    raster <- createRaster(spdf = spdf, resolution = rst.res)
+    avg_spdf <- createAvgSpdf(spdf, raster, col.names)
     
-    variogram <- createVariogram(equation, spdf, buffer_width, buffer_cutoff)
+    buffer.width <- getBufferWidth(raster)
+    buffer.cutoff <- getBufferCutoff(spdf)
     
-    range_state <- round(getRange(variogram))
-    ranges <- c(ranges, range_state)
+    variogram <- createVariogram(equation, spdf, buffer.width, buffer.cutoff)
+    
+    range.state <- round(getRange(variogram))
+    ranges <- c(ranges, range.state)
   }
   
-  ranges_df <- data.frame(adjStates, ranges)
-  return (ranges_df)
+  ranges.df <- data.frame(adj.states, ranges)
+  return (ranges.df)
 }
 
-getBufferedSpdf <- function(state.abbrv, directory, column.names, projection, ranges.df) {
+getBufferedSpdf <- function(state.abbrv, pnt.dir, col.names, proj.str, ranges.df, pnt.suffix, adj.states) {
   
   originalState_border <- selectState(state.abbrv)
   
-  vct_path <- paste(directory, state.abbrv, sep = "")
-  originalState_points <- createSpdf(vct_path, column.names, projection)
+  vct.path <- paste(pnt.dir, state.abbrv, pnt.suffix, sep = "")
+  originalState_points <- createSpdf(vct.path, col.names, projection)
 
   for (state in seq(1:dim(ranges.df)[1])){
     
-    stateAbbrv <- as.character(ranges.df$adjState[state])
+    stateAbbrv <- as.character(ranges.df$adj.states[state])
     
     # select border of adjacent state
     singleState_border <- selectState(stateAbbrv)
@@ -85,7 +83,7 @@ getBufferedSpdf <- function(state.abbrv, directory, column.names, projection, ra
     singleState_range <- (ranges.df$ranges[state])
     
     # create buffer of original state with adjacent state range
-    originalState_buffer <- gBuffer(originalState, width = singleState_range)
+    originalState_buffer <- gBuffer(originalState_border, width = singleState_range)
     
     # pull out points for the adjacent state
     vct_path <- paste("/home/sean/traffic/WA_example/", stateAbbrv, sep = "")
@@ -97,9 +95,7 @@ getBufferedSpdf <- function(state.abbrv, directory, column.names, projection, ra
     adjState_clipped_points <- gIntersection(originalState_buffer, adjState_points)
     
     # merge the points to the original state
-    
     originalState_points <- spRbind(originalState_points, adjState_clipped_points)
-    
   } 
   return(originalState_points)
 }

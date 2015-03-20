@@ -107,7 +107,7 @@ createRaster <- function(spdf, resolution) {
 
 createAvgSpdf <- function(spdf, rast, col_names) {
   
-  #############
+  ############
   
   # PURPOSE
   # creates SpatialPointsDataFrame with values averaged
