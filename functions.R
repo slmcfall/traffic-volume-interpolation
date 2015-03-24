@@ -168,7 +168,7 @@ getBufferCutoff <- function(spdf) {
   y2 <- spdf_bbox[4]
   
   spdf_bbox_dist <- sqrt((x1-x2)^2 + (y1-y2)^2)
-  spdf_range <- spdf_bbox_dist * .35
+  spdf_range <- spdf_bbox_dist * .01
   
   return(spdf_range) 
 }

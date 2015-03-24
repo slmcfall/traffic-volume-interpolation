@@ -30,7 +30,7 @@ state.ranges <- getStateRanges(adj.states = adjacent.states,
                                pnt.dir    = data.directory, 
                                rst.res    = 1000
                                )
-
+# currently not working, did this step manually
 buffered.spdf <- getBufferedSpdf(state.abbrv = stateAbbreviation,
                                  pnt.dir     = data.directory,
                                  col.names   = c("AADT"),
@@ -39,11 +39,17 @@ buffered.spdf <- getBufferedSpdf(state.abbrv = stateAbbreviation,
                                  pnt.suffix  = data.suffix,
                                  adj.states  = adjacent.states)
 
-WA.raster <- createRaster(spdf = buffered.spdf, resolution = 1000 )
-#WA.avg.spdf <- createAvgSpdf(spdf = buffered.spdf, rast = WA.raster, col_names = c("AADT"))
-WA.cutoff <- getBufferCutoff(spdf = buffered.spdf)
+# manual creation of washington state buffered points
+
+WA.spdf <- createSpdf(vct_path = "/home/sean/traffic/WA_example/WA_buffer_points", col_names = c("AADT"), proj4 = projection)
+WA.raster <- createRaster(spdf = WA.spdf, resolution = 1000 )
+WA.avg.spdf <- createAvgSpdf(spdf = WA.spdf, rast = WA.raster, col_names = c("AADT"))
+WA.cutoff <- getBufferCutoff(spdf = WA.spdf)
 WA.width <- getBufferWidth(rast = WA.raster)
-WA.variogram <- createVariogram(equation = c("AADT~1"), spdf = buffered.spdf, varWidth = WA.width, varCutoff = WA.cutoff)
+WA.variogram <- createVariogram(equation = c("AADT~1"), spdf = WA.spdf, varWidth = WA.width, varCutoff = WA.cutoff)
+WA.grid <- as(WA.raster, 'SpatialGridDataFrame')
+
+createKrigeLayer(spdf = WA.spdf, grid = WA.grid, raster = WA.raster, equation = c("AADT ~ 1"), variogram = WA.variogram, rst_name = "WA")
 
 # the data I automatically created with just AADT, AADT column not showing up for some reason....
 # the problem is buffered.spdf is creating a SpatialPoints class, not a SpatialPointsDataFrame
