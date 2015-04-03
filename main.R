@@ -37,45 +37,37 @@ buffered.spdf <- getBufferedSpdf(state.abbrv = stateAbbreviation,
                                  proj.str    = projection,
                                  ranges.df   = state.ranges,
                                  pnt.suffix  = data.suffix,
-                                 adj.states  = adjacent.states)
+                                 adj.states  = adjacent.states
+                                 )
 
-# validation example
-
-createValidationData <- function(spdf, testingProportion) {
-  n <- nrow(buffered.spdf)
-  ns <- n - round(n * testingProportion)
-  nv <- n - ns
-  
-  index.training <- sample(nrow(buffered.spdf), size = ns, replace = FALSE)
-  index.testing <- setdiff(1:nrow(buffered.spdf), index.training)
-  
-  spdf.training <- spdf[index.training,]
-  spdf.testing <- spdf[index.testing,]
-  
-  return(list(spdf.training, spdf.testing))
-}
-
+log.spdf <- logTransformSpdf(buffered.spdf, c("AADT"), projection)
 validation.spdf.list <- createValidationData(buffered.spdf, .3)
-# training [[1]] testing [[2]]
-WA.spdf.tr <- validation.spdf.list[[1]]
-WA.spdf.tst <- validation.spdf.list[[2]]
+training.spdf <- validation.spdf.list[[1]]
+test.spdf <- validation.spdf.list[[2]]
+
+tr.raster <- createRaster(spdf = training.spdf, resolution = 1000 )
+tr.avg.spdf <- createAvgSpdf(spdf = training.spdf, rast = tr.raster, col_names = c("AADT"))
+tr.cutoff <- getBufferCutoff(spdf = training.spdf)
+tr.width <- getBufferWidth(rast = tr.raster)
+tr.variogram <- createVariogram(equation = c("AADT~1"), spdf = traning.spdf, varWidth = tr.width, varCutoff = tr.cutoff)
+tr.grid <- as(tr.raster, 'SpatialGridDataFrame')
+
+tr.krige <- createKrigeLayer(spdf = traning.spdf, grid = WA.grid, 
+                              raster = WA.raster, equation = c("AADT ~ 1"), 
+                              variogram = WA.variogram, rst_name = "WA")
+
+writeKrigeLayer(krige.layer = tr.krige, raster = tr.raster, name.prefix = stateAbbreviation)
+
+tr.surfaces <- getKrigeRasters(krige.layer = WA.krige2, extent.raster = tr.raster)
+
+
 
 ############# log transformed data
 
-traning.coordinates <- as.data.frame(WA.spdf.tr@coords)
-traning.values <- as.data.frame(log(WA.spdf.tr@data$AADT))
-traning.spdf <- SpatialPointsDataFrame(coords=traning.coordinates, data=traning.values)
-names(traning.spdf) <- c("AADT")
-proj4string(traning.spdf) <- projection
-
-tst.coordinates <- as.data.frame(WA.spdf.tst@coords)
-tst.values <- as.data.frame(log(WA.spdf.tst@data$AADT))
-tst.spdf <- SpatialPointsDataFrame(coords=tst.coordinates, data=tst.values)
-names(tst.spdf) <- c("AADT")
-proj4string(tst.spdf) <- projection
-
 ## get points for testing data
 WA.log.sp.tst <- SpatialPoints(coordinates(tst.spdf))
+proj4string(traning.spdf) <- projection
+WA.log.sp.tr <- SpatialPoints(coordinates(traning.spdf))
 proj4string(traning.spdf) <- projection
 
 ## pull out layers
@@ -96,6 +88,7 @@ values(krige_var_rst) <- as.numeric(krige_var)
 
 ## extract testing points calues from training raster
 WA.log.tst.ext <- extract(krige_pred_rst, WA.log.sp.tst)
+WA.log.tr.ext <- extract(krige_pred_rst, WA.log.sp.tr)
 
 ## get observed and predicted values
 WA.spdf.obs <- tst.spdf
@@ -105,6 +98,12 @@ WA.spdf.pred <- SpatialPointsDataFrame(coords = as.data.frame(WA.log.sp.tst@coor
 WA.predicted <- WA.log.tst.ext
 WA.observed <- tst.spdf$AADT
 WA.residuals <- WA.observed - WA.predicted
+
+WA.predicted.tr <- WA.log.tr.ext
+WA.observed.tr <- traning.spdf$AADT
+WA.residuals <- WA.observed.tr - WA.predicted.tr
+mae(WA.residuals)
+rmse(WA.residuals)
 
 ## residuals as spdf
 #WA.spdf.res <- SpatialPointsDataFrame(coords = as.data.frame(WA.sp.tst@coords),

@@ -215,6 +215,46 @@ createKrigeLayer <- function(spdf, grid, raster, equation, variogram, rst_name) 
   writeRaster(krige_var_rst, paste(rst_name,"var_autofit.tif", sep=""), overwrite = TRUE)
 }
 
+writeKrigeLayer <- function(krige.layer, extent.raster, name.prefix) {
+  
+  # prediction layer
+  krige_pred <- krige.layer$var1.pred
+  krige_pred_rst <- extent.raster
+  names(krige_pred_rst) <- "krige_pred"
+  clearValues(krige_pred_rst) 
+  values(krige_pred_rst) <- as.numeric(krige_pred)
+  
+  # error layer
+  krige_var <- krige.layer$var1.var
+  krige_var_rst <- extent.raster
+  names(krige_var_rst) <- "krige_var"
+  clearValues(krige_var_rst) 
+  values(krige_var_rst) <- as.numeric(krige_var)
+  
+  writeRaster(krige_pred_rst, paste(name.prefix,"pred_autofit.tif", sep=""), overwrite = TRUE)
+  
+  writeRaster(krige_var_rst, paste(name.prefix,"var_autofit.tif", sep=""), overwrite = TRUE)
+}
+
+getKrigeRasters<- function(krige.layer, extent.raster) {
+  
+  # prediction layer
+  krige_pred <- krige.layer$var1.pred
+  krige_pred_rst <- extent.raster
+  names(krige_pred_rst) <- "krige_pred"
+  clearValues(krige_pred_rst) 
+  values(krige_pred_rst) <- as.numeric(krige_pred)
+  
+  # error layer
+  krige_var <- krige.layer$var1.var
+  krige_var_rst <- extent.raster
+  names(krige_var_rst) <- "krige_var"
+  clearValues(krige_var_rst) 
+  values(krige_var_rst) <- as.numeric(krige_var)
+  
+  return(list(krige_pred_rst, krige_var_rst))
+}
+
 doKrige <- function(shapefile, columnname, resolution, equation, width, cutoff, outputname) {
   
   spdf <- createSpdf(shapefile, columnname)
@@ -404,13 +444,36 @@ writeRasters <- function(krige.layer, extent.raster, output.name) {
   return(list(krige_pred_rst, krige_var_rst))
 }
 
+createValidationData <- function(spdf, testingProportion) {
+  n <- nrow(buffered.spdf)
+  ns <- n - round(n * testingProportion)
+  nv <- n - ns
+  
+  index.training <- sample(nrow(buffered.spdf), size = ns, replace = FALSE)
+  index.testing <- setdiff(1:nrow(buffered.spdf), index.training)
+  
+  spdf.training <- spdf[index.training,]
+  spdf.testing <- spdf[index.testing,]
+  
+  return(list(spdf.training, spdf.testing))
+}
 
-
-
-
-
-
-
+logTransformSpdf <- function(spdf, column.names, projection) {
+  
+  # spdf = spatialpointsdataframe
+  # column.name = vector with attribute names
+  # projection = desired proj4string
+  
+  log.coordinates <- as.data.frame(spdf@coords)
+  log.values <- as.data.frame(spdf)
+  log.values <- log(log.values[column.names])
+  
+  log.spdf <- SpatialPointsDataFrame(coords = log.coordinates, data = log.values)
+  names(log.spdf) <- c(column.names)
+  proj4string(log.spdf) <- projection
+  
+  return(log.spdf)
+}
 
 # next three functions, credit to Michael Koohafkan
 
