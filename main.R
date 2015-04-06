@@ -1,20 +1,22 @@
 # main.R
 
 # define directory with point data
-data.directory <- "/home/sean/traffic/AADT/"
+data.directory <- "/home/cga13/Documents/traffic-volume-interpolation/AADT/"
 data.suffix <- "_AADT"
 
 # call functions and libraries
-source("~/Documents/trafficVolume/functions.R")
+source("~/Documents/traffic-volume-interpolation/functions.R")
 
 # define projection, albers equal area
 aea <- "+proj=aea +lat_1=38 +lat_2=41 +lat_0=34 +lon_0=-114 +x_0=0 +y_0=0 +datum=NAD27 +units=m +no_defs"
 
 # polygon for the continental US
-cUS <- readOGR(dsn = "/home/sean/Documents/trafficVolume/cUS.shp", layer = "cUS")
+## need to have selectState function have cUS called from elsewhere....?
+cUS <- readOGR(dsn = "/home/cga13/Documents/traffic-volume-interpolation/cUS.shp", layer = "cUS")
+proj4string(cUS) <- aea
 
 # state to be buffered
-stateAbbreviations <- list("OR")
+stateAbbreviations <- list("WA", "NV", "CA", "ID")
 
 analysis <- lineprof(main(state.list = stateAbbreviations, column.names = c("AADT"), equation = c("AADT ~ 1"), 
                           data.suffix = data.suffix, data.directory = data.directory, resolution = 1000, 
@@ -26,7 +28,7 @@ main <- function(state.list, column.names, equation, data.suffix, data.directory
   
   for (state.name in state.list){
 
-    adjacent.states <- getAdjStates(state.abbrv = state.name)
+    adjacent.states <- getAdjStates(state.abbr = state.name)
     
     state.ranges <- getStateRanges(adj.states = adjacent.states, proj.str = projection, 
                                    col.names  = column.names, equation = equation, 
@@ -34,7 +36,7 @@ main <- function(state.list, column.names, equation, data.suffix, data.directory
                                    rst.res    = resolution
                                    )
     
-    buffered.spdf <- getBufferedSpdf(state.abbrv = state.name, pnt.dir = data.directory,
+    buffered.spdf <- getBufferedSpdf(state.abbr = state.name, pnt.dir = data.directory,
                                      col.names   = column.names, proj.str = projection,
                                      ranges.df   = state.ranges, pnt.suffix = data.suffix,
                                      adj.states  = adjacent.states, data.directory = data.directory
@@ -55,7 +57,7 @@ main <- function(state.list, column.names, equation, data.suffix, data.directory
     
     tr.grid <- as(tr.raster, 'SpatialGridDataFrame')
     
-    tr.krige <- createKrigeLayer(spdf = training.spdf, grid = WA.grid, 
+    tr.krige <- createKrigeLayer(spdf = training.spdf, grid = tr.grid, 
                                   raster = tr.raster, equation = equation, 
                                   variogram = tr.variogram, rst_name = state.name)
     

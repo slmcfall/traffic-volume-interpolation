@@ -27,7 +27,7 @@ require(lattice)
 library(plyr)
 library(lineprof)
 
-createSpdf <- function(vct_path, col_names, proj4) {
+createSpdf <- function(vct_path, col_names, proj) {
   
   #############
   
@@ -47,14 +47,11 @@ createSpdf <- function(vct_path, col_names, proj4) {
   
   # get basename and directory of file
   vct_name <- basename(vct_path)
+  vct_name <- gsub('.{4}$', '', vct_name)
   vct_dir <- dirname(vct_path)
   
   # bring vector file into memory
   vector <- readOGR(dsn = vct_dir, layer = vct_name)
-  
-  # get proj4string
-  # proj <- "+proj=aea +lat_1=38 +lat_2=41 +lat_0=34 +lon_0=-114 +x_0=0 +y_0=0 +datum=NAD27 +units=m +no_defs"
-  proj <- proj4
   
   # convert targeted column into df
   vector_df <- as.data.frame(vector)
@@ -65,7 +62,7 @@ createSpdf <- function(vct_path, col_names, proj4) {
   
   vector_spdf <- SpatialPointsDataFrame(vector_coords, vector_df)
   # set spdf projection, column names
-  proj4string(vector_spdf) <- proj
+  # proj4string(vector_spdf) <- proj
   names(vector_spdf) <- col_names
   
   return (vector_spdf)
@@ -286,7 +283,6 @@ getRange <- function(variogram) {
   return (range)
 }
 
-
 selectState <- function(stateName) {
   state <- cUS[cUS$STATE_ABBR == stateName,]
   return(state)
@@ -302,8 +298,8 @@ stateVector <- as.vector(stateFactor)
 colnames(adjTable) <- stateVector
 rownames(adjTable) <- stateVector
 
-getAdjStates <- function(state.abbrv) {
-  adjStates <- which(adjTable[state.abbrv,] == "TRUE")
+getAdjStates <- function(state.abbr) {
+  adjStates <- which(adjTable[state.abbr,] == "TRUE")
   adjStates <- names(adjStates)
   
   return(adjStates)
@@ -315,8 +311,8 @@ getStateRanges <- function(adj.states, proj.str, col.names, equation, pnt.suffix
   
   ranges <- c()
   
-  for (state.abbrv in adj.states) {
-    vct.path <- paste(pnt.dir, state.abbrv, pnt.suffix, sep = "")
+  for (abbr in adj.states) {
+    vct.path <- paste(pnt.dir, abbr, pnt.suffix, ".shp", sep = "")
     
     spdf <- createSpdf(vct.path, col.names, proj.str)
     raster <- createRaster(spdf = spdf, resolution = rst.res)
@@ -335,12 +331,11 @@ getStateRanges <- function(adj.states, proj.str, col.names, equation, pnt.suffix
   return (ranges.df)
 }
 
-getBufferedSpdf <- function(state.abbrv, pnt.dir, col.names, proj.str, 
-                            ranges.df, pnt.suffix, adj.states, data.directory) {
+getBufferedSpdf <- function(state.abbr, pnt.dir, col.names, proj.str, ranges.df, pnt.suffix, adj.states, data.directory) {
   
-  originalState_border <- selectState(state.abbrv)
+  originalState_border <- selectState(state.abbr)
   
-  vct.path <- paste(pnt.dir, state.abbrv, pnt.suffix, sep = "")
+  vct.path <- paste(pnt.dir, state.abbr, pnt.suffix, ".shp", sep = "")
   originalState_points <- createSpdf(vct.path, col.names, projection)
   
   # data frame to be combined with original state
@@ -359,7 +354,7 @@ getBufferedSpdf <- function(state.abbrv, pnt.dir, col.names, proj.str,
     originalState_buffer <- gBuffer(originalState_border, width = singleState_range)
     
     # pull out points for the adjacent state
-    vct_path <- paste(data.directory, "/", stateAbbrv, "_AADT", sep = "")
+    vct_path <- paste(data.directory, "/", stateAbbrv, "_AADT", ".shp", sep = "")
     column_names <- c("AADT")
     
     adjState_points <- createSpdf(vct_path, column_names, projection)

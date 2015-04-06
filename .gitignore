@@ -3,6 +3,7 @@
 /data
 /CTshapefile
 /NCshapefile
+/AADT
 *.docx*
 *.odt
 *.swo
