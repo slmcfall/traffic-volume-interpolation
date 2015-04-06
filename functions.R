@@ -25,6 +25,7 @@ library(automap)
 library(tools)
 require(lattice)
 library(plyr)
+library(lineprof)
 
 createSpdf <- function(vct_path, col_names, proj4) {
   

@@ -16,8 +16,9 @@ cUS <- readOGR(dsn = "/home/sean/Documents/trafficVolume/cUS.shp", layer = "cUS"
 # state to be buffered
 stateAbbreviations <- list("OR")
 
-main(state.list = stateAbbreviations, column.names = c("AADT"), equation = c("AADT ~ 1"), 
-     data.suffix = data.suffix, data.directory = data.directory, resolution = 1000, projection = aea)
+analysis <- lineprof(main(state.list = stateAbbreviations, column.names = c("AADT"), equation = c("AADT ~ 1"), 
+                          data.suffix = data.suffix, data.directory = data.directory, resolution = 1000, 
+                          projection = aea))
 
 #####
 
