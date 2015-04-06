@@ -334,7 +334,8 @@ getStateRanges <- function(adj.states, proj.str, col.names, equation, pnt.suffix
   return (ranges.df)
 }
 
-getBufferedSpdf <- function(state.abbrv, pnt.dir, col.names, proj.str, ranges.df, pnt.suffix, adj.states) {
+getBufferedSpdf <- function(state.abbrv, pnt.dir, col.names, proj.str, 
+                            ranges.df, pnt.suffix, adj.states, data.directory) {
   
   originalState_border <- selectState(state.abbrv)
   
@@ -357,7 +358,7 @@ getBufferedSpdf <- function(state.abbrv, pnt.dir, col.names, proj.str, ranges.df
     originalState_buffer <- gBuffer(originalState_border, width = singleState_range)
     
     # pull out points for the adjacent state
-    vct_path <- paste("/home/sean/traffic/WA_example/", stateAbbrv, sep = "")
+    vct_path <- paste(data.directory, "/", stateAbbrv, "_AADT", sep = "")
     column_names <- c("AADT")
     
     adjState_points <- createSpdf(vct_path, column_names, projection)
@@ -469,12 +470,12 @@ getErrorValues <- function(validation.spdfs, column.names) {
 }
 # this needs a better function name
 createValidationData <- function(spdf, testingProportion) {
-  n <- nrow(buffered.spdf)
+  n <- nrow(spdf)
   ns <- n - round(n * testingProportion)
   nv <- n - ns
   
-  index.training <- sample(nrow(buffered.spdf), size = ns, replace = FALSE)
-  index.testing <- setdiff(1:nrow(buffered.spdf), index.training)
+  index.training <- sample(nrow(spdf), size = ns, replace = FALSE)
+  index.testing <- setdiff(1:nrow(spdf), index.training)
   
   spdf.training <- spdf[index.training,]
   spdf.testing <- spdf[index.testing,]
