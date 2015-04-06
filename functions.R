@@ -444,6 +444,30 @@ writeRasters <- function(krige.layer, extent.raster, output.name) {
   return(list(krige_pred_rst, krige_var_rst))
 }
 
+# need to fix inclusion of column.names
+getErrorValues <- function(validation.spdfs, column.names) {
+  
+  observed.spdf <- tst.validation.dfs[[1]]
+  predicted.spdf <- tst.validation.dfs[[2]]
+  
+  obs.vals <- as.data.frame(observed.spdf)
+  obs.vals <- obs.vals[column.names]
+  obs.vals <- data.matrix(obs.vals)
+  
+  pred.vals <- predicted.spdf$AADT
+  
+  resid.vals <- obs.vals - pred.vals
+  
+  mae.val <- mae(resid.vals)
+  rmse.val <- rmse(resid.vals)
+  
+  error.list <- list(mae.val, rmse.val)
+  names(error.list) <- c("MAE", "RMSE")
+  
+  return(error.list)
+  
+}
+# this needs a better function name
 createValidationData <- function(spdf, testingProportion) {
   n <- nrow(buffered.spdf)
   ns <- n - round(n * testingProportion)
@@ -456,6 +480,31 @@ createValidationData <- function(spdf, testingProportion) {
   spdf.testing <- spdf[index.testing,]
   
   return(list(spdf.training, spdf.testing))
+}
+
+# this needs a better function name
+createValidationDataFrames <- function(spdf, projection, krige.surface) {
+  
+  # get points where values are compared
+  spdf.points <- SpatialPoints(coordinates(spdf))
+  proj4string(spdf.points) <- projection
+  
+  # extract values from kriged raster surface
+  extracted.values <- extract(krige.surface, spdf.points)
+  
+  observed.values.df <- spdf
+  predicted.values.df <- SpatialPointsDataFrame(coords = as.data.frame(spdf@coords),
+                                                data   = as.data.frame(extracted.values))
+  names(predicted.values.df) <- c("AADT") 
+    
+  output.list <- list(observed.values.df, predicted.values.df)
+  names(output.list) <- c("Observed", "Predicted")
+  
+  #
+  # rename column names
+  #
+  
+  return(output.list)
 }
 
 logTransformSpdf <- function(spdf, column.names, projection) {
