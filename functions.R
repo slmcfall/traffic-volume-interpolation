@@ -444,8 +444,8 @@ writeRasters <- function(krige.layer, extent.raster, output.name) {
 # need to fix inclusion of column.names
 getErrorValues <- function(validation.spdfs, column.names) {
   
-  observed.spdf <- tst.validation.dfs[[1]]
-  predicted.spdf <- tst.validation.dfs[[2]]
+  observed.spdf <- validation.spdfs[[1]]
+  predicted.spdf <- validation.spdfs[[2]]
   
   obs.vals <- as.data.frame(observed.spdf)
   obs.vals <- obs.vals[column.names]
@@ -512,7 +512,12 @@ logTransformSpdf <- function(spdf, column.names, projection) {
   
   log.coordinates <- as.data.frame(spdf@coords)
   log.values <- as.data.frame(spdf)
+  
+  # extract values, make any values less than 0 equal to 0
   log.values <- log(log.values[column.names])
+  log.values.matrix <- as.matrix(log.values)
+  log.values.matrix[log.values.matrix<0] <- 0
+  log.values <- as.data.frame(log.values.matrix)
   
   log.spdf <- SpatialPointsDataFrame(coords = log.coordinates, data = log.values)
   names(log.spdf) <- c(column.names)
