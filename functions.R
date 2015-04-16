@@ -9,6 +9,8 @@
 #
 #
 
+# LIBRARIES
+# need to delete unused
 library(geoR)
 library(rgdal)
 library(rgeos)
@@ -27,6 +29,10 @@ require(lattice)
 library(plyr)
 library(lineprof)
 
+# LOAD CONUS POLYGON
+cUS <- readOGR(dsn = "/home/sean/Documents/trafficVolume/cUS.shp", layer = "cUS")
+
+# FUNCTIONS
 createSpdf <- function(vct_path, col_names, proj) {
   
   #############
@@ -526,70 +532,70 @@ logTransformSpdf <- function(spdf, column.names, projection) {
   return(log.spdf)
 }
 
-
-main <- function(state.list, column.names, equation, data.suffix, data.directory, resolution, projection) {
+main <- function(state) {
   
-  for (state.name in state.list){
-    
-    adjacent.states <- getAdjStates(state.abbrv = state.name)
-    
-    state.ranges <- getStateRanges(adj.states = adjacent.states, proj.str = projection, 
-                                   col.names  = column.names, equation = equation, 
-                                   pnt.suffix = data.suffix, pnt.dir = data.directory, 
-                                   rst.res    = resolution
-    )
-    
-    buffered.spdf <- getBufferedSpdf(state.abbrv = state.name, pnt.dir = data.directory,
-                                     col.names   = column.names, proj.str = projection,
-                                     ranges.df   = state.ranges, pnt.suffix = data.suffix,
-                                     adj.states  = adjacent.states, data.directory = data.directory
-    )
-    
-    log.spdf <- logTransformSpdf(buffered.spdf, column.names, projection)
-    validation.spdf.list <- createValidationData(log.spdf, .3)
-    training.spdf <- validation.spdf.list[[1]]
-    test.spdf <- validation.spdf.list[[2]]
-    
-    tr.raster <- createRaster(spdf = training.spdf, resolution = resolution )
-    tr.avg.spdf <- createAvgSpdf(spdf = training.spdf, rast = tr.raster, col_names = column.names)
-    tr.cutoff <- getBufferCutoff(spdf = training.spdf)
-    tr.width <- getBufferWidth(rast = tr.raster)
-    tr.variogram <- createVariogram(equation = equation, spdf = training.spdf, 
-                                    varWidth = tr.width, varCutoff = tr.cutoff)
-    # save variogram
-    
-    tr.grid <- as(tr.raster, 'SpatialGridDataFrame')
-    
-    tr.krige <- createKrigeLayer(spdf = training.spdf, grid = WA.grid, 
-                                 raster = tr.raster, equation = equation, 
-                                 variogram = tr.variogram, rst_name = state.name)
-    
-    # write out rasters, save them as objects too
-    #writeKrigeLayer(krige.layer = tr.krige, extent.raster = tr.raster, name.prefix = state.name)
-    
-    tr.surfaces <- getKrigeRasters(krige.layer = tr.krige, extent.raster = tr.raster)
-    
-    tr.pred.rst <- tr.surfaces[[1]]
-    
-    tst.validation.dfs <- createValidationDataFrames(spdf = test.spdf, projection = projection,
-                                                     krige.surface = tr.pred.rst)
-    tr.validation.dfs <- createValidationDataFrames(spdf = training.spdf, projection = projection,
-                                                    krige.surface = tr.pred.rst)
-    
-    tr.err.vals <- getErrorValues(validation.spdfs = tr.validation.dfs, column.names = column.names)
-    tst.err.vals <- getErrorValues(validation.spdfs = tst.validation.dfs, column.names = column.names)
-    
-    output.list <- list(tr.krige, tr.validation.dfs, tst.validation.dfs, tr.variogram, tr.err.vals, tst.err.vals)
-    names(output.list) <- c("Krige Object", "Training Validation Table", "Testing Validation Table",
-                            "Variogram", "Training Error Values", "Testing Error Values")
-    
-    saveRDS(output.list, paste(state.name, "_output.rds", sep=""))
-  }
+  state.name = state
+  column.names = c("AADT")
+  equation = c("AADT ~ 1")
+  resolution = 1000
+  
+  adjacent.states <- getAdjStates(state.abbr = state.name)
+  
+  state.ranges <- getStateRanges(adj.states = adjacent.states, proj.str = projection, 
+                                 col.names  = column.names, equation = equation, 
+                                 pnt.suffix = data.suffix, pnt.dir = data.directory, 
+                                 rst.res    = resolution)
+  
+  buffered.spdf <- getBufferedSpdf(state.abbr = state.name, pnt.dir = data.directory,
+                                   col.names   = column.names, proj.str = projection,
+                                   ranges.df   = state.ranges, pnt.suffix = data.suffix,
+                                   adj.states  = adjacent.states, data.directory = data.directory)
+  
+  log.spdf <- logTransformSpdf(buffered.spdf, column.names, projection)
+  validation.spdf.list <- createValidationData(log.spdf, .3)
+  training.spdf <- validation.spdf.list[[1]]
+  test.spdf <- validation.spdf.list[[2]]
+  
+  tr.raster <- createRaster(spdf = training.spdf, resolution = resolution )
+  tr.avg.spdf <- createAvgSpdf(spdf = training.spdf, rast = tr.raster, col_names = column.names)
+  tr.cutoff <- getBufferCutoff(spdf = training.spdf)
+  tr.width <- getBufferWidth(rast = tr.raster)
+  tr.variogram <- createVariogram(equation = equation, spdf = training.spdf, 
+                                  varWidth = tr.width, varCutoff = tr.cutoff)
+  # save variogram
+  
+  tr.grid <- as(tr.raster, 'SpatialGridDataFrame')
+  
+  tr.krige <- createKrigeLayer(spdf = training.spdf, grid = tr.grid, 
+                               raster = tr.raster, equation = equation, 
+                               variogram = tr.variogram, rst_name = state.name)
+  
+  # write out rasters, save them as objects too
+  writeKrigeLayer(krige.layer = tr.krige, extent.raster = tr.raster, name.prefix = state.name)
+  
+  tr.surfaces <- getKrigeRasters(krige.layer = tr.krige, extent.raster = tr.raster)
+  
+  tr.pred.rst <- tr.surfaces[[1]]
+  
+  tst.validation.dfs <- createValidationDataFrames(spdf = test.spdf, projection = projection,
+                                                   krige.surface = tr.pred.rst)
+  tr.validation.dfs <- createValidationDataFrames(spdf = training.spdf, projection = projection,
+                                                  krige.surface = tr.pred.rst)
+  
+  tr.err.vals <- getErrorValues(validation.spdfs = tr.validation.dfs, column.names = column.names)
+  tst.err.vals <- getErrorValues(validation.spdfs = tst.validation.dfs, column.names = column.names)
+  
+  output.list <- list(tr.krige, tr.validation.dfs, tst.validation.dfs, tr.variogram, tr.err.vals, tst.err.vals)
+  names(output.list) <- c("Krige Object", "Training Validation Table", "Testing Validation Table",
+                          "Variogram", "Training Error Values", "Testing Error Values")
+  
+  saveRDS(output.list, paste(state.name, "_output.rds", sep=""))
 }
+
 
 # next three functions, credit to Michael Koohafkan
 
-annotatedplot <- function(krigeobj) {
+annotatedplot <- function(krigeobj, title) {
   annotatedplot <- xyplot(gamma ~ dist, data = krigeobj$exp_var, panel = automap:::autokrige.vgm.panel,
                           #labels = as.character(krigeobj$exp_var$np * 0), 
                           labels = "",
@@ -597,7 +603,7 @@ annotatedplot <- function(krigeobj) {
                           direction = c(krigeobj$exp_var$dir.hor[1], krigeobj$exp_var$dir.ver[1]),
                           ylim = c(min(0, 1.04 * min(krigeobj$exp_var$gamma)), 1.04 * max(krigeobj$exp_var$gamma)),
                           xlim = c(0, 1.04 * max(krigeobj$exp_var$dist)), xlab = "Distance", ylab = "Semi-variance",
-                          main = "Experimental variogram and fitted variogram model", mode = "direct") 
+                          main = title, mode = "direct") 
   return(annotatedplot)
 }
 
