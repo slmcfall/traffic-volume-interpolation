@@ -27,10 +27,10 @@ library(automap)
 library(tools)
 require(lattice)
 library(plyr)
-library(lineprof)
+#library(lineprof)
 
 # LOAD CONUS POLYGON
-cUS <- readOGR(dsn = "/home/sean/Documents/trafficVolume/cUS.shp", layer = "cUS")
+cUS <- readOGR(dsn = "/Users/seanmcfall/Documents/traffic-volume-interpolation/cUS.shp", layer = "cUS")
 
 # FUNCTIONS
 createSpdf <- function(vct_path, col_names, proj) {
@@ -586,8 +586,8 @@ main <- function(state) {
   tst.err.vals <- getErrorValues(validation.spdfs = tst.validation.dfs, column.names = column.names)
   
   output.list <- list(tr.krige, tr.validation.dfs, tst.validation.dfs, tr.variogram, tr.err.vals, tst.err.vals)
-  names(output.list) <- c("Krige Object", "Training Validation Table", "Testing Validation Table",
-                          "Variogram", "Training Error Values", "Testing Error Values")
+  names(output.list) <- c("KrigeObject", "TrainingValidationTable", "TestingValidationTable",
+                          "Variogram", "TrainingErrorValues", "TestingErrorValues")
   
   saveRDS(output.list, paste(state.name, "_output.rds", sep=""))
 }
