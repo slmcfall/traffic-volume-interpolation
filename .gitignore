@@ -12,3 +12,6 @@
 *.odf
 *.pdf
 *.ods
+*.R*
+*.rds
+*.png

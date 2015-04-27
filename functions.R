@@ -27,10 +27,9 @@ library(automap)
 library(tools)
 require(lattice)
 library(plyr)
-library(lineprof)
 
 # LOAD CONUS POLYGON
-cUS <- readOGR(dsn = "/home/sean/Documents/trafficVolume/cUS.shp", layer = "cUS")
+# cUS <- readOGR(dsn = "/Users/seanmcfall/Documents/traffic-volume-interpolation/cUS.shp", layer = "cUS")
 
 # FUNCTIONS
 createSpdf <- function(vct_path, col_names, proj) {
