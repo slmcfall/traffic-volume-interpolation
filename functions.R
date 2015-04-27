@@ -585,9 +585,9 @@ main <- function(state) {
   tr.err.vals <- getErrorValues(validation.spdfs = tr.validation.dfs, column.names = column.names)
   tst.err.vals <- getErrorValues(validation.spdfs = tst.validation.dfs, column.names = column.names)
   
-  output.list <- list(tr.krige, tr.validation.dfs, tst.validation.dfs, tr.variogram, tr.err.vals, tst.err.vals)
-  names(output.list) <- c("Krige Object", "Training Validation Table", "Testing Validation Table",
-                          "Variogram", "Training Error Values", "Testing Error Values")
+  output.list <- list(tr.krige, tr.surfaces, tr.validation.dfs, tst.validation.dfs, tr.variogram, tr.err.vals, tst.err.vals)
+  names(output.list) <- c("KrigeObject", "KrigeSurfaces", "TrainingValidationTable", "TestingValidationTable",
+                          "Variogram", "TrainingError Values", "TestingErrorValues")
   
   saveRDS(output.list, paste(state.name, "_output.rds", sep=""))
 }

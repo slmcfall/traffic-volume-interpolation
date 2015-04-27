@@ -7,14 +7,14 @@ source("/home/sean/Documents/trafficVolume/functions.R")
 aea <- "+proj=aea +lat_1=38 +lat_2=41 +lat_0=34 +lon_0=-114 +x_0=0 +y_0=0 +datum=NAD27 +units=m +no_defs"
 
 # define directory with input AADT point data
-data.directory <- "/home/cga13/Documents/traffic-volume-interpolation/AADT/"
+data.directory <- "/home/sean/Documents/traffic-volume-interpolation/AADT/"
 data.suffix <- "_AADT"
 
 # polygon for the continental US
 ## need to have selectState function have cUS called from elsewhere....?
 
 
-stateAbbreviations <- list("CT")
+stateAbbreviations <- list("WA", "OR")
 
 lapply(stateAbbreviations, main)
 
