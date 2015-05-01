@@ -1,13 +1,13 @@
 # main.R
 
 # call functions and libraries
-# source("/Users/seanmcfall/Documents/traffic-volume-interpolation/functions.R")
+source("/home/sean/Documents/trafficVolume/functions.R")
 
 # define projection, albers equal area
 aea <- "+proj=aea +lat_1=38 +lat_2=41 +lat_0=34 +lon_0=-114 +x_0=0 +y_0=0 +datum=NAD27 +units=m +no_defs"
 
 # define directory with input AADT point data
-data.directory <- "/home/sean/Documents/traffic-volume-interpolation/AADT/"
+data.directory <- "/home/sean/Documents/trafficVolume/AADT/"
 data.suffix <- "_AADT"
 
 # polygon for the continental US
@@ -19,6 +19,7 @@ stateAbbreviations <- list("WA", "OR")
 lapply(stateAbbreviations, main)
 
 ########################
+# setwd("/home/sean/traffic/forExample/)
 
 az <- readRDS("AZ_output.rds")
 ca <- readRDS("CA_output.rds")
@@ -89,8 +90,42 @@ foo[[1]]
 # box plot 
 boxplot(az.list)
 
+getRsqrd <- function(rds) {
+  
+  pred <- getPredList(rds)
+  obs <- getObsList(rds)
+  
+  model <- lm(obs ~ pred)
+  
+  return(summary(model)$adj.r.squared)
+  
+}
 
+getMAE <- function(rds) {
+  
+  pred <- getPredList(rds)
+  obs <- getObsList(rds)
+  
+  model <- lm(obs ~ pred)
+  
+  return(summary(model)$adj.r.squared)
+  
+}
 
+getRMSE <- function(rds) {
+  
+  pred <- getPredList(rds)
+  obs <- getObsList(rds)
+  
+  model <- lm(obs ~ pred)
+  
+  return(summary(model)$adj.r.squared)
+  
+}
 
+azPred <- getPredList(az)
+azObs <- getObsList(az)
+
+azLm <- lm(azObs ~ azPred)
 
 

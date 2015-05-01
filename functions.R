@@ -591,6 +591,39 @@ main <- function(state) {
   saveRDS(output.list, paste(state.name, "_output.rds", sep=""))
 }
 
+getRsqrd <- function(rds) {
+  
+  pred <- getPredList(rds)
+  obs <- getObsList(rds)
+  
+  model <- lm(obs ~ pred)
+  
+  return(summary(model)$adj.r.squared)
+  
+}
+
+getMAE <- function(rds) {
+  
+  pred <- getPredList(rds)
+  obs <- getObsList(rds)
+  
+  model <- lm(obs ~ pred)
+  
+  return(summary(model)$adj.r.squared)
+  
+}
+
+getRMSE <- function(rds) {
+  
+  pred <- getPredList(rds)
+  obs <- getObsList(rds)
+  
+  model <- lm(obs ~ pred)
+  
+  return(summary(model)$adj.r.squared)
+  
+}
+
 
 # next three functions, credit to Michael Koohafkan
 
