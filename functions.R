@@ -591,6 +591,10 @@ main <- function(state) {
   saveRDS(output.list, paste(state.name, "_output.rds", sep=""))
 }
 
+#
+# Dealing with the .rds files
+#
+
 getRsqrd <- function(rds) {
   
   pred <- getPredList(rds)
@@ -622,6 +626,28 @@ getRMSE <- function(rds) {
   
   return(summary(model)$adj.r.squared)
   
+}
+
+getObsList <- function(rds) {
+  
+  # capture the data from the lists
+  rds.obs <- rds[2][[1]]$Observed
+  
+  # get them as values
+  rds.obs.vals <- rds.obs$AADT
+  
+  return (rds.obs.vals)
+}
+
+getPredList <- function(rds) {
+  
+  # capture data from rds list
+  rds.pred <- rds[2][[1]]$Predicted
+  
+  # get as values
+  rds.pred.vals <- rds.pred$AADT
+  
+  return(rds.pred.vals)
 }
 
 
