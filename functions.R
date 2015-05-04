@@ -413,14 +413,12 @@ getBufferedSpdf <- function(state.abbr, pnt.dir, col.names, proj.str, ranges.df,
 }
 
 # Function that returns Root Mean Squared Error
-rmse <- function(error)
-{
+rmse <- function(error) {
   sqrt(mean(error^2, na.rm = TRUE))
 }
 
 # Function that returns Mean Absolute Error
-mae <- function(error)
-{
+mae <- function(error) {
   mean(abs(error), na.rm = TRUE)
 }
 
@@ -447,10 +445,12 @@ writeRasters <- function(krige.layer, extent.raster, output.name) {
 }
 
 # need to fix inclusion of column.names
-getErrorValues <- function(validation.spdfs, column.names) {
+getErrorValues <- function(rds, column.names) {
   
-  observed.spdf <- validation.spdfs[[1]]
-  predicted.spdf <- validation.spdfs[[2]]
+  # TRAINING
+  
+  observed.spdf <- rds[2][[1]][[1]]
+  predicted.spdf <- rds[2][[1]][[2]]
   
   obs.vals <- as.data.frame(observed.spdf)
   obs.vals <- obs.vals[column.names]
@@ -460,13 +460,49 @@ getErrorValues <- function(validation.spdfs, column.names) {
   
   resid.vals <- obs.vals - pred.vals
   
-  mae.val <- mae(resid.vals)
-  rmse.val <- rmse(resid.vals)
+  mae.tr <- mae(resid.vals)
+  mae.tr.per <- mae.tr / max(obs.vals)
+  rmse.tr <- rmse(resid.vals)
+  rmse.tr.per <- rmse.tr / max(obs.vals)
   
-  error.list <- list(mae.val, rmse.val)
-  names(error.list) <- c("MAE", "RMSE")
+  model <- lm(obs.vals ~ pred.vals)
   
-  return(error.list)
+  r2.tr <- summary(model)[[3]][[9]]
+  
+  # TESTING
+  
+  observed.spdf <- rds[3][[1]][[1]]
+  predicted.spdf <- rds[3][[1]][[2]]
+  
+  obs.vals <- as.data.frame(observed.spdf)
+  obs.vals <- obs.vals[column.names]
+  obs.vals <- data.matrix(obs.vals)
+  
+  pred.vals <- predicted.spdf$AADT
+  
+  resid.vals <- obs.vals - pred.vals
+  
+  mae.tst <- mae(resid.vals)
+  mae.tst.per <- mae.tr / max(obs.vals)
+  rmse.tst <- rmse(resid.vals)
+  rmse.tst.per <- rmse.tr / max(obs.vals)
+  
+  model <- lm(obs.vals ~ pred.vals)
+  
+  r2.tst <- summary(model)[[3]][[9]]
+
+  # DATA FRAME
+  
+  RMSE <- c(rmse.tr, rmse.tst)
+  MAE <- c(mae.tr, mae.tst)
+  RMSEpercent <- round(c(rmse.tr.per, rmse.tst.per), 2)
+  MAEpercent <- round(c(mae.tr.per, mae.tst.per), 2)
+  R2 <- round(c(r2.tr, r2.tst), 2)
+    
+  df <- data.frame(RMSE, MAE, RMSEpercent, MAEpercent, R2)
+  row.names(df) <- c("Training", "Testing")
+  
+  return(df)
   
 }
 # this needs a better function name
@@ -596,28 +632,6 @@ main <- function(state) {
 #
 
 getRsqrd <- function(rds) {
-  
-  pred <- getPredList(rds)
-  obs <- getObsList(rds)
-  
-  model <- lm(obs ~ pred)
-  
-  return(summary(model)$adj.r.squared)
-  
-}
-
-getMAE <- function(rds) {
-  
-  pred <- getPredList(rds)
-  obs <- getObsList(rds)
-  
-  model <- lm(obs ~ pred)
-  
-  return(summary(model)$adj.r.squared)
-  
-}
-
-getRMSE <- function(rds) {
   
   pred <- getPredList(rds)
   obs <- getObsList(rds)

@@ -14,7 +14,7 @@ data.suffix <- "_AADT"
 ## need to have selectState function have cUS called from elsewhere....?
 
 
-stateAbbreviations <- list("WA", "OR")
+stateAbbreviations <- list("NC", "VA", "SC", "MA", "ME")
 
 lapply(stateAbbreviations, main)
 
