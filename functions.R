@@ -17,12 +17,9 @@ library(rgeos)
 library(gstat)
 library(sp)
 library(raster)
-library(maptools)
 library(rasterVis)  
 library(rgeos)      
 library(gtools)     
-library(colorRamps) 
-library(gridExtra)
 library(automap)
 library(tools)
 require(lattice)
@@ -445,7 +442,8 @@ writeRasters <- function(krige.layer, extent.raster, output.name) {
 }
 
 # need to fix inclusion of column.names
-getErrorValues <- function(rds, column.names) {
+# but doesn't really matter as the rds object is unique for my purposes
+getErrorValuesRDS <- function(rds, column.names) {
   
   # TRAINING
   
@@ -505,6 +503,30 @@ getErrorValues <- function(rds, column.names) {
   return(df)
   
 }
+
+getErrorValues <- function(validation.spdfs, column.names) {
+  
+  observed.spdf <- validation.spdfs[[1]]
+  predicted.spdf <- validation.spdfs[[2]]
+  
+  obs.vals <- as.data.frame(observed.spdf)
+  obs.vals <- obs.vals[column.names]
+  obs.vals <- data.matrix(obs.vals)
+  
+  pred.vals <- predicted.spdf$AADT
+  
+  resid.vals <- obs.vals - pred.vals
+  
+  mae.val <- mae(resid.vals)
+  rmse.val <- rmse(resid.vals)
+  
+  error.list <- list(mae.val, rmse.val)
+  names(error.list) <- c("MAE", "RMSE")
+  
+  return(error.list)
+  
+}
+
 # this needs a better function name
 createValidationData <- function(spdf, testingProportion) {
   n <- nrow(spdf)
@@ -601,9 +623,30 @@ main <- function(state) {
   
   tr.grid <- as(tr.raster, 'SpatialGridDataFrame')
   
+  # begin output to log file
+  pointNum <- as.character(length(training.spdf[1]))
+  
+  print("--------------------------------")
+  print(paste("Kriging", state.name, sep=" "))
+  print(Sys.time())
+  print(paste("There are",pointNum,"points to interpolate", sep = " "))
+  print("--------------------------------")
+  ptm <- proc.time()
+  
   tr.krige <- createKrigeLayer(spdf = training.spdf, grid = tr.grid, 
                                raster = tr.raster, equation = equation, 
                                variogram = tr.variogram, rst_name = state.name)
+  
+  elapsedSecs <- proc.time() - ptm 
+  elapsedSecs <- elapsedSecs[3[[1]]]
+  
+  elapsedMins <- elapsedSecs / 60
+  elapsedHrs  <- elapsedMins / 60
+  #processTime <- (proc.time() - ptm) / 1000 / 60  # convert to seconds, then minutes
+  print("Time to Interpolate:")
+  print(paste("Seconds:",elapsedSecs, sep = " "))
+  print(paste("Minutes:",elapsedMins, sep = " "))
+  print(paste("Hours:",elapsedHrs, sep = " "))
   
   # write out rasters, save them as objects too
   writeKrigeLayer(krige.layer = tr.krige, extent.raster = tr.raster, name.prefix = state.name)
