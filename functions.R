@@ -644,6 +644,9 @@ main <- function(state) {
   elapsedHrs  <- elapsedMins / 60
   #processTime <- (proc.time() - ptm) / 1000 / 60  # convert to seconds, then minutes
   print("Time to Interpolate:")
+  if (elapsedSecs >= 60) {
+    print
+  }
   print(paste("Seconds:",elapsedSecs, sep = " "))
   print(paste("Minutes:",elapsedMins, sep = " "))
   print(paste("Hours:",elapsedHrs, sep = " "))
